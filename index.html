@@ -1,0 +1,287 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Atmosphera — Weather</title>
+    <link rel="stylesheet" href="style.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;900&family=Space+Mono:wght@400;700&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <!-- Aurora background layers -->
+    <div class="aurora" aria-hidden="true">
+      <div class="aurora__layer aurora__layer--1"></div>
+      <div class="aurora__layer aurora__layer--2"></div>
+      <div class="aurora__layer aurora__layer--3"></div>
+    </div>
+
+    <!-- Stars -->
+    <canvas id="stars" aria-hidden="true"></canvas>
+
+    <div class="app">
+      <!-- Header -->
+      <header class="header">
+        <div class="header__brand">
+          <span class="header__logo">◈</span>
+          <span class="header__name">Atmosphera</span>
+        </div>
+        <div class="header__time" id="clock"></div>
+      </header>
+
+      <!-- Search -->
+      <section class="search-section">
+        <div class="search-wrapper">
+          <div class="search-box">
+            <svg
+              class="search-icon"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.5"
+            >
+              <circle cx="11" cy="11" r="8" />
+              <path d="m21 21-4.35-4.35" />
+            </svg>
+            <input
+              type="text"
+              id="location-input"
+              class="search-input"
+              placeholder="Search any city worldwide…"
+              autocomplete="off"
+              spellcheck="false"
+            />
+            <button
+              class="gps-btn"
+              id="gps-btn"
+              title="Use my location"
+              aria-label="Detect my location"
+            >
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.5"
+              >
+                <circle cx="12" cy="12" r="3" />
+                <path d="M12 2v3m0 14v3M2 12h3m14 0h3" />
+                <path d="M12 5a7 7 0 1 0 0 14A7 7 0 0 0 12 5z" />
+              </svg>
+            </button>
+          </div>
+          <button class="search-btn" id="search-btn">
+            Get Weather
+            <span class="search-btn__arrow">→</span>
+          </button>
+        </div>
+        <div class="quick-cities" id="quick-cities">
+          <span class="quick-label">Quick:</span>
+          <button class="quick-btn" data-city="Tokyo">Tokyo</button>
+          <button class="quick-btn" data-city="London">London</button>
+          <button class="quick-btn" data-city="New York">New York</button>
+          <button class="quick-btn" data-city="Warangal">Warangal</button>
+          <button class="quick-btn" data-city="Dubai">Dubai</button>
+        </div>
+      </section>
+
+      <!-- Content area -->
+      <main class="main" id="main-content">
+        <!-- Idle state -->
+        <div class="idle-state" id="idle-state">
+          <div class="idle-orb">
+            <div class="idle-orb__inner">🌐</div>
+          </div>
+          <p class="idle-text">Enter a city to reveal the atmosphere</p>
+        </div>
+
+        <!-- Loading state -->
+        <div class="loading-state hidden" id="loading-state">
+          <div class="loader">
+            <div class="loader__ring"></div>
+            <div class="loader__ring loader__ring--2"></div>
+            <div class="loader__ring loader__ring--3"></div>
+          </div>
+          <p class="loading-text">Reading the atmosphere…</p>
+        </div>
+
+        <!-- Error state -->
+        <div class="error-state hidden" id="error-state">
+          <div class="error-icon">⚠</div>
+          <p class="error-msg" id="error-msg">Something went wrong.</p>
+          <button class="retry-btn" id="retry-btn">Try Again</button>
+        </div>
+
+        <!-- Weather display -->
+        <div class="weather-display hidden" id="weather-display">
+          <!-- Hero card -->
+          <div class="hero-card glass">
+            <div class="hero-card__top">
+              <div class="hero-card__location">
+                <h1 class="city-name" id="city-name">—</h1>
+                <p class="country-name" id="country-name">—</p>
+              </div>
+              <div class="hero-card__emoji" id="weather-emoji">🌤</div>
+            </div>
+
+            <div class="hero-card__mid">
+              <div class="temp-block">
+                <span class="temp-value" id="temp-value">—</span>
+                <span class="temp-deg">°C</span>
+              </div>
+              <div class="temp-meta">
+                <span class="condition-text" id="condition-text">—</span>
+                <span class="feels-like" id="feels-like">Feels like —°C</span>
+              </div>
+            </div>
+
+            <div class="hero-card__divider"></div>
+
+            <!-- Stats row -->
+            <div class="stats-row" id="stats-row">
+              <div class="stat-item">
+                <svg
+                  class="stat-icon"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.5"
+                >
+                  <path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z" />
+                </svg>
+                <span class="stat-val" id="humidity-val">—</span>
+                <span class="stat-lbl">Humidity</span>
+              </div>
+              <div class="stat-item">
+                <svg
+                  class="stat-icon"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.5"
+                >
+                  <path
+                    d="M9.59 4.59A2 2 0 1 1 11 8H2m10.59 11.41A2 2 0 1 0 14 16H2m15.73-8.27A2.5 2.5 0 1 1 19.5 12H2"
+                  />
+                </svg>
+                <span class="stat-val" id="wind-val">—</span>
+                <span class="stat-lbl">Wind km/h</span>
+              </div>
+              <div class="stat-item">
+                <svg
+                  class="stat-icon"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.5"
+                >
+                  <circle cx="12" cy="12" r="5" />
+                  <path
+                    d="M12 1v2m0 18v2M4.22 4.22l1.42 1.42m12.72 12.72 1.42 1.42M1 12h2m18 0h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"
+                  />
+                </svg>
+                <span class="stat-val" id="uv-val">—</span>
+                <span class="stat-lbl">UV Index</span>
+              </div>
+              <div class="stat-item">
+                <svg
+                  class="stat-icon"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.5"
+                >
+                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                  <circle cx="12" cy="12" r="3" />
+                </svg>
+                <span class="stat-val" id="vis-val">—</span>
+                <span class="stat-lbl">Visibility</span>
+              </div>
+              <div class="stat-item">
+                <svg
+                  class="stat-icon"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.5"
+                >
+                  <path
+                    d="M12 22V12m0-10v4m-7 3H2m20 0h-3M5.2 5.2l2.1 2.1m9.4 9.4 2.1 2.1M5.2 18.8l2.1-2.1m9.4-9.4 2.1-2.1"
+                  />
+                </svg>
+                <span class="stat-val" id="pressure-val">—</span>
+                <span class="stat-lbl">Pressure hPa</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Forecast strip -->
+          <div class="forecast-section">
+            <h2 class="section-title">5-Day Forecast</h2>
+            <div class="forecast-strip" id="forecast-strip">
+              <!-- Populated by JS -->
+            </div>
+          </div>
+
+          <!-- Hourly feel -->
+          <div class="hourly-section">
+            <h2 class="section-title">Today's Hourly</h2>
+            <div class="hourly-strip" id="hourly-strip">
+              <!-- Populated by JS -->
+            </div>
+          </div>
+
+          <!-- Sunrise/Sunset -->
+          <div class="sun-section glass">
+            <div class="sun-arc-wrap">
+              <canvas id="sun-arc" width="320" height="120"></canvas>
+            </div>
+            <div class="sun-times">
+              <div class="sun-time">
+                <span class="sun-icon">🌅</span>
+                <span class="sun-val" id="sunrise-val">—</span>
+                <span class="sun-lbl">Sunrise</span>
+              </div>
+              <div class="sun-time">
+                <span class="sun-icon">🌇</span>
+                <span class="sun-val" id="sunset-val">—</span>
+                <span class="sun-lbl">Sunset</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+
+    <script src="script.js"></script>
+    <!-- API Key Modal -->
+    <div id="api-key-modal" class="hidden">
+      <div class="api-key-backdrop"></div>
+      <div class="api-key-content glass">
+        <h3>OpenWeather API Key</h3>
+        <p id="api-key-msg">
+          Your current API key appears invalid. Paste a valid OpenWeather API
+          key below.
+        </p>
+        <input
+          id="api-key-input"
+          type="text"
+          placeholder="Paste API key here"
+        />
+        <div
+          style="
+            display: flex;
+            gap: 8px;
+            justify-content: flex-end;
+            margin-top: 12px;
+          "
+        >
+          <button id="api-key-cancel" class="retry-btn">Cancel</button>
+          <button id="api-key-save" class="search-btn">Save Key</button>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>
